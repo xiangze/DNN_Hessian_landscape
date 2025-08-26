@@ -3,6 +3,13 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms, models
 
+
+# ===== 2) モデル（ResNet-18 を 10クラスに調整）=====
+def make_model():
+    model = models.resnet18(weights=None)   # 事前学習なし。ImageNet重みを使うなら weights='IMAGENET1K_V1' など
+    model.fc = nn.Linear(model.fc.in_features, 10)
+    return model
+
 def hvp(model, loss_fn, data_loader, v, device='cuda', num_batches=1):
     """
     Hv を返す。データは num_batches バッチで近似平均。
@@ -82,7 +89,7 @@ def train():
     test_loader  = DataLoader(test_set, batch_size=256, shuffle=False,
                             num_workers=4, pin_memory=True)
 
-    model=make_model()
+    model = make_model().to(device)
     # 例：1epochだけ回す（時間節約のため任意）
     quick_train(model, train_loader, epochs=1, lr=0.1)
 
@@ -105,17 +112,8 @@ def train():
     rank_est = int((evals.abs() > tol).sum().item())
     return rank_est
 
-# ===== 2) モデル（ResNet-18 を 10クラスに調整）=====
-def make_model():
-    model = models.resnet18(weights=None)   # 事前学習なし。ImageNet重みを使うなら weights='IMAGENET1K_V1' など
-    model.fc = nn.Linear(model.fc.in_features, 10)
-    return model
-
-model = make_model().to(device)
-
 
 if __name__=="__main__":
-    # ===== 0) 基本セットアップ =====
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(0)
     train()
