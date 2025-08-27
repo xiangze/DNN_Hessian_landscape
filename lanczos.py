@@ -54,7 +54,7 @@ def lanczos_topk(model, loss_fn, data_loader, dim, k=10, m=80, device='cuda'):
     evecs = Qmat @ U                    # Ritz ベクトル [dim, k]
     return evals, evecs
 
-i
+
 def make_model():
     model = models.resnet18(weights=None)   # 事前学習なし。ImageNet重みを使うなら weights='IMAGENET1K_V1' など
     model.fc = nn.Linear(model.fc.in_features, 10)
@@ -89,14 +89,12 @@ def train(device,vecnum=5):
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.4914, 0.4822, 0.4465),
-                            std=(0.2470, 0.2435, 0.2616)),
-    ])
+                            std=(0.2470, 0.2435, 0.2616)),    ])
 
     transform_eval = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.4914, 0.4822, 0.4465),
-                            std=(0.2470, 0.2435, 0.2616)),
-    ])
+                            std=(0.2470, 0.2435, 0.2616)),    ])
 
     train_set = datasets.CIFAR10(root='./data', train=True, download=True,
                                 transform=transform_train)
@@ -111,12 +109,12 @@ def train(device,vecnum=5):
     model = make_model().to(device)
 
     # 例：1epochだけ回す（時間節約のため任意）
-    quick_train(model, train_loader, epochs=1, lr=0.1)
+    quick_train(model, train_loader,device, epochs=1, lr=0.1)
 
     # ===== 4) Hessian/HVP用の損失関数 =====
     loss_fn = nn.CrossEntropyLoss(reduction='mean')
     
-    # パラメタ次元
+    # パラメータ次元
     dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
     # 上位固有対
     evals, evecs = lanczos_topk(model, loss_fn, train_loader, dim, k=vecnum, m=100, device=device)
