@@ -95,6 +95,10 @@ def train():
 
     # ===== 4) Hessian/HVP用の損失関数 =====
     loss_fn = nn.CrossEntropyLoss(reduction='mean')
+    return model,loss_fn,[train_loader,test_loader]
+
+def hv_eigen():
+    model,loss_fn,[train_loader,test_loader]=train()
     # パラメタ次元
     dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
     # 上位固有対
@@ -106,7 +110,6 @@ def train():
     v = v / v.norm()                     
 
     evals, evecs = hvp(model, loss_fn, train_loader, v, device='cuda', num_batches=1)
-                    #hvp(model, loss_fn, train_loader, dim, k=5, m=100, device=device)
     # ランク推定（しきい値でカウント）
     tol = 1e-6  # スケールに応じて調整（例: loss/バッチ平均の規模）
     rank_est = int((evals.abs() > tol).sum().item())
