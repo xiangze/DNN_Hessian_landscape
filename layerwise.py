@@ -5,7 +5,8 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms, models
-from model import make_model
+from train_various_data_net import simple_train
+
 from train_various_data_net import quick_train
 # ------------------------------------------------------------
 # 3) ヘルパー: 各「レイヤ」（Conv/Linear）ごとのパラメタ群を抽出
@@ -109,9 +110,8 @@ def train(device):
     train_loader = DataLoader(train_set, batch_size=128, shuffle=True,
                             num_workers=4, pin_memory=True)
 
-    model = make_model().to(device)
-    model=quick_train(model, train_loader, epochs=1, lr=0.1)
-    model.eval()  # BN/Dropout固定（2階微分安定化のため）
+    model,loss_fn,[train_loader,test_loader] =simple_train(device,epochs=100)
+    #model.eval()  # BN/Dropout固定（2階微分安定化のため）
     loss_fn = nn.CrossEntropyLoss(reduction='mean')
     return model,loss_fn,train_loader
 
@@ -184,9 +184,10 @@ def traineval_layerwise(show=True):
     import json
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print("device,",device)
-    model,loss_fn,train_loader=train()    
+    model,loss_fn,train_loader=train(device)  
+    model.eval()  # BN/Dropout固定（2階微分安定化のため）  
     results=hessian_trase_layerwise(device,model,loss_fn,train_loader,show)
-    with oepn("layerwire_result.json","w") as fp:
+    with open("layerwire_result.json","w") as fp:
         json.dump(results,fp)
 
 if __name__=="__main__":
