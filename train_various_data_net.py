@@ -37,7 +37,6 @@ def quick_train(model, train_loader, device,epochs=1, lr=0.1):
             scheduler.step()
 
 def simple_train(device,epochs=100):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(0)
 
     # ===== 1) CIFAR-10 用データ前処理・DataLoader =====
@@ -500,7 +499,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='色々なdatasetを色々なnetworkで学習数r）') 
     parser.add_argument('--model', default='resnet50')
     parser.add_argument('--dataset', default='MNIST')
-    parser.add_argument('--batchsize', default=128,type=int)
+    parser.add_argument('--batchsize', default=128,type=int) #256
     parser.add_argument('--lr', default=0.05,type=float)
     parser.add_argument('--epochs', default=5,type=int)
     args = parser.parse_args()
@@ -510,10 +509,12 @@ if __name__ == "__main__":
     lr=args.lr
     epochs=args.epochs
     train_image_classifier(model_name=model_name, dataset_name=dataset_name, epochs=epochs, batch_size=batchsize, lr=lr)
-    #train_image_classifier(model_name="resnet50", dataset_name="CIFAR10", epochs=2, batch_size=256, lr=0.05)
+    exit()
     # 例: MNIST × MobileNetV3（1ch→3chは自動）
-    #train_image_classifier(model_name="mobilenet_v3_small", dataset_name="MNIST", epochs=2, batch_size=256, lr=0.05)
-    #train_image_classifier(model_name="efficientnet_b0", dataset_name="CIFAR100", epochs=2, batch_size=128, lr=0.05)
-    #train_image_classifier(model_name="convnext_tiny", dataset_name="ImageFolder", data_root="/path/to/ds")
+    for model_name in ["resnet50","MNIST","mobilenet_v3_small"]:
+        for dataset_nam in ["CIFAR10","CIFAR100", "efficientnet_b0","convnext_tiny"] :
+            train_image_classifier(model_name=model_name, dataset_name=dataset_name, epochs=epochs, batch_size=batchsize, lr=lr)
+
+    #dataset_name="ImageFolder", data_root="/path/to/ds")
 
 

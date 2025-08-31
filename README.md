@@ -11,6 +11,12 @@ DNNのHessianのrank,固有値、固有ベクトルを高速に求める
 - [HELENE: HESSIAN LAYER-WISE CLIPPING AND GRADIENT ANNEALING FOR ACCELERATING FINETUNING LLM WITH ZEROTH-ORDER OPTIMIZATIO](https://arxiv.org/abs/2411.10696)
 - [HAWQ-V2] (https://proceedings.neurips.cc/paper/2020/hash/d77c703536718b95308130ff2e5cf9ee-Abstract.html)
 
+- [pyhessian](https://www.stat.berkeley.edu/~mmahoney/pubs/pyhessian_conf20.pdf)
+  - [pyhessian(code)](https://github.com/amirgholami/PyHessian)
+- https://github.com/Zhen-Dong/HAWQ
+-  https://github.com/noahgolmant/pytorch-hessian-eigenthings/tree/master
+
+
 from ChatGPT5
 **「学習済みDNNの解における Hessian の固有値分布やランク欠損（多くの固有値がゼロ近傍に潰れている＝退化の割合）」** 
 ---

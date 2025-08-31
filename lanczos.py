@@ -52,13 +52,12 @@ def lanczos_topk(model, loss_fn, data_loader, dim, topk=10, m=80, device='cuda')
     evecs = Qmat @ U                    # Ritz ベクトル [dim, k]
     return evals, evecs
 
-def get_eigenvecs(model,loss_fn,data_loader, outfilename,topk=5):
+def get_eigenvecs(outfilename,topk=5):
     #学習,CrossEnttopylossは後で用いる
-    model,loss_fn,[train_loader,test_loader] =simple_train(device,epochs=100,)
-    # パラメータ次元
-    dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    # 上位固有対
-    evals, evecs = lanczos_topk(model, loss_fn, data_loader, dim, k=topk, m=100, device=device)
+    model,loss_fn,[data_loader,test_loader] =simple_train(device,epochs=100,)
+    param_dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    # top-k eigen values/vectors
+    evals, evecs = lanczos_topk(model, loss_fn, data_loader, param_dim, k=topk, m=100, device=device)
     # ランク推定（しきい値でカウント）
     tol = 1e-6  # スケールに応じて調整（例: loss/バッチ平均の規模）
     rank_est = int((evals.abs() > tol).sum().item())
@@ -72,4 +71,5 @@ def get_eigenvecs(model,loss_fn,data_loader, outfilename,topk=5):
 
 if __name__=="__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print(device)
     get_eigenvecs("lanc")
