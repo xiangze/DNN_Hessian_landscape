@@ -45,7 +45,7 @@ def hvp(model, loss_fn, data_loader, v, device='cuda', num_batches=1):
     Hv = [h / count for h in Hv]
     return torch.cat([h.reshape(-1) for h in Hv])
 
-def get_eigenvecs(model,loss_fn,train_loader):
+def getvec(model,loss_fn,train_loader):
     # パラメタ次元
     dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
     # 上位固有対
@@ -54,14 +54,11 @@ def get_eigenvecs(model,loss_fn,train_loader):
     print("Total dim:", dim)
     v = torch.randn(dim, device=device)  
     v = v / v.norm()                     
-
-    v= hvp(model, loss_fn, train_loader, v, device='cuda', num_batches=1)
-    # ランク推定（しきい値でカウント）
-    return v
+    return hvp(model, loss_fn, train_loader, v, device='cuda', num_batches=1)
 
 def getHessianrank_hpv(device,outfilename):
     model,loss_fn,[train_loader,test_loader]=simple_train(device)
-    v=get_eigenvecs(model,loss_fn,train_loader)
+    v=getvec(model,loss_fn,train_loader)
     with open(outfilename,"w") as fpw:
         print("Hv",v,file=fpw)
 

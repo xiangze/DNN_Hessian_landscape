@@ -37,7 +37,7 @@ def quick_train(model, train_loader, device,epochs=1, lr=0.1):
             scheduler.step()
     return model
 
-def simple_train(device,epochs=100):
+def simple_train(device,epochs=2):
     torch.manual_seed(0)
 
     # ===== 1) CIFAR-10 用データ前処理・DataLoader =====
@@ -61,9 +61,8 @@ def simple_train(device,epochs=100):
     test_loader  = DataLoader(test_set, batch_size=256, shuffle=False, num_workers=4, pin_memory=True)
 
     model = make_model().to(device)
-
     quick_train(model, train_loader,device, epochs=epochs, lr=0.1)
-
+    # ===== 4) Hessian/HVP用の損失関数 =====
     loss_fn = nn.CrossEntropyLoss(reduction='mean')
     return model,loss_fn,[train_loader,test_loader]
 
