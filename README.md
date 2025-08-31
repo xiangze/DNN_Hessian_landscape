@@ -1,9 +1,13 @@
 # 概要
 DNNのHessianのrank,固有値、固有ベクトルを高速に求める
 
-- Lanczos法
-- hpv法()
-- 層ごととの
+- Lanczos法 結局hpvは使う,ライブラリ関数のみ
+- hpv法(Hacchinton )　
+- 層ごととのHessian計算(layerwise) 
+# Usage
+> python3 lanczos.py
+> python3 layerwise.py
+
 # 関連情報
 - [https://docs.backpack.pt/en/1.2.0/use_cases/example_trace_estimation.html](https://docs.backpack.pt/en/1.2.0/use_cases/example_trace_estimation.html)
 - [PYHESSIAN: Neural Networks Through the Lens of the Hessian](https://cocoa-t.tistory.com/entry/PyHessian-Loss-Landscape-%EC%8B%9C%EA%B0%81%ED%99%94-PyHessian-Neural-Networks-Through-the-Lens-of-the-Hessian)

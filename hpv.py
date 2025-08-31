@@ -120,5 +120,5 @@ def hv_eigen():
 if __name__=="__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     torch.manual_seed(0)
-    train()
+    hv_eigen()
 

@@ -35,6 +35,7 @@ def quick_train(model, train_loader, device,epochs=1, lr=0.1):
             loss.backward()
             optimizer.step()
             scheduler.step()
+    return model
 
 def simple_train(device,epochs=100):
     torch.manual_seed(0)

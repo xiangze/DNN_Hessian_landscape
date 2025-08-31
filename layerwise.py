@@ -6,7 +6,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms, models
 from model import make_model
-
+from train_various_data_net import quick_train
 # ------------------------------------------------------------
 # 3) ヘルパー: 各「レイヤ」（Conv/Linear）ごとのパラメタ群を抽出
 #    ここでは Conv2d/Linear を1単位レイヤとして扱う（HAWQ-V2の想定に近い）
@@ -85,8 +85,7 @@ def hessian_trace_for_layer(model, loss_fn, data_loader, layer_params,
         trace_est += torch.dot(z, Hz).item()
     return trace_est / num_trace_samples
 
-def train():
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+def train(device):
     torch.manual_seed(0)
 
     # ----------------------------
@@ -111,10 +110,12 @@ def train():
                             num_workers=4, pin_memory=True)
 
     model = make_model().to(device)
-
+    model=quick_train(model, train_loader, epochs=1, lr=0.1)
     model.eval()  # BN/Dropout固定（2階微分安定化のため）
     loss_fn = nn.CrossEntropyLoss(reduction='mean')
+    return model,loss_fn,train_loader
 
+def hessian_trase_layerwise(device,model,loss_fn,train_loader,show=True):
     layer_param_groups = group_params_by_layer(model)
 
     # ------------------------------------------------------------
@@ -151,12 +152,13 @@ def train():
     results = sorted(results, key=lambda x: x["trace_per_param"], reverse=True)
 
     # 表示
-    print(f"[HAWQ-V2 style] Layer-wise Hessian trace on CIFAR-10/ResNet18")
-    print(f"(trace samples={num_trace_samples}, batches per HVP={num_batches_for_hvp})")
-    for r in results:
-        print(f"{r['layer']:28s}  #params={r['num_params']:7d}  "
-            f"trace={r['trace']:.3e}  trace/param={r['trace_per_param']:.3e}")
-
+    if(show):
+        print(f"[HAWQ-V2 style] Layer-wise Hessian trace on CIFAR-10/ResNet18")
+        print(f"(trace samples={num_trace_samples}, batches per HVP={num_batches_for_hvp})")
+        for r in results:
+            print(f"{r['layer']:28s}  #params={r['num_params']:7d}  "
+                f"trace={r['trace']:.3e}  trace/param={r['trace_per_param']:.3e}")
+    
     # ------------------------------------------------------------
     # 7) （オプション）簡易ビット割当のヒント
     #    大きい trace/param の層ほど高ビットにする（HAWQ系の典型方針）
@@ -175,6 +177,17 @@ def train():
     for r in results:
         print(f"{r['layer']:28s}  bits={r['suggested_bits']}  "
             f"trace/param={r['trace_per_param']:.3e}")
+        
+    return results
+
+def traineval_layerwise(show=True):
+    import json
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    print("device,",device)
+    model,loss_fn,train_loader=train()    
+    results=hessian_trase_layerwise(device,model,loss_fn,train_loader,show)
+    with oepn("layerwire_result.json","w") as fp:
+        json.dump(results,fp)
 
 if __name__=="__main__":
-    train()
+    traineval_layerwise()

@@ -44,7 +44,7 @@ def lanczos_topk(model, loss_fn, data_loader, dim, topk=10, m=80, device='cuda')
         T[i+1, i] = beta[i+1]
 
     evals, U = torch.linalg.eigh(T)  # tri-diagonal の固有分解
-    idx = torch.argsort(evals, descending=True)[:k]
+    idx = torch.argsort(evals, descending=True)[:topk]
     evals = evals[idx]
     U = U[:, idx]
 
@@ -52,24 +52,28 @@ def lanczos_topk(model, loss_fn, data_loader, dim, topk=10, m=80, device='cuda')
     evecs = Qmat @ U                    # Ritz ベクトル [dim, k]
     return evals, evecs
 
-def get_eigenvecs(outfilename,topk=5):
-    #学習,CrossEnttopylossは後で用いる
-    model,loss_fn,[data_loader,test_loader] =simple_train(device,epochs=100,)
+def _get_eigenvecs(model,loss_fn,data_loader,topk=5,tol = 1e-6):
     param_dim = sum(p.numel() for p in model.parameters() if p.requires_grad)
     # top-k eigen values/vectors
-    evals, evecs = lanczos_topk(model, loss_fn, data_loader, param_dim, k=topk, m=100, device=device)
-    # ランク推定（しきい値でカウント）
-    tol = 1e-6  # スケールに応じて調整（例: loss/バッチ平均の規模）
+    evals, evecs = lanczos_topk(model, loss_fn, data_loader, param_dim, topk=topk, m=100, device=device)
+    # ランク推定（しきい値 tol でカウント）,スケールに応じて調整（例: loss/バッチ平均の規模）
     rank_est = int((evals.abs() > tol).sum().item())
+    return rank_est,evals,evecs
+
+def get_eigenvecs(outfilename,topk=5):
+   #学習,CrossEnttopylossは後で用いる
+    model,loss_fn,[data_loader,test_loader] =simple_train(device,epochs=100)
+
+    rank_est,evals,evecs= _get_eigenvecs(model,loss_fn,data_loader,topk)
     
     with open(outfilename) as fpw:
         print(f"上位{topk}個",file=fpw)
         print(f"rank{rank_est}",file=fpw)
         print(f"固有値{evals}",file=fpw)
         print(f"固有ベクトル{evecs}",file=fpw)
-    return 
+
 
 if __name__=="__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(device)
-    get_eigenvecs("lanc")
+    get_eigenvecs("lanclog.txt")
