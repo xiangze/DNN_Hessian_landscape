@@ -58,18 +58,18 @@ def _get_eigenvecs(model,loss_fn,data_loader,topk=5,m=10,tol = 1e-6):
     evals, evecs = lanczos_topk(model, loss_fn, data_loader, param_dim, topk=topk, m=m, device=device)
     # ランク推定（しきい値 tol でカウント）,スケールに応じて調整（例: loss/バッチ平均の規模）
     rank_est = int((evals.abs() > tol).sum().item())
+    evecs = evecs.to('cpu').detach().numpy().copy()
+    evals = evals.to('cpu').detach().numpy().copy()
     return rank_est,evals,evecs
 
 def get_eigenvecs(outfilename,topk=5,m=10):
-   #学習,CrossEnttopylossは後で用いる
     model,loss_fn,[data_loader,test_loader] =simple_train(device,epochs=100)
-
     rank_est,evals,evecs= _get_eigenvecs(model,loss_fn,data_loader,topk,m)
     
-    with open(outfilename,"w") as fpw:
+    with open(f"{outfilename}_{m}_{topk},"w") as fpw:
         print(f"反復{m}回",file=fpw)
         print(f"上位{topk}個",file=fpw)
-        print(f"rank{rank_est}",file=fpw)
+        print(f"rank {rank_est}",file=fpw)
         print(f"固有値{evals}",file=fpw)
         print(f"固有ベクトル{evecs}",file=fpw)
 
