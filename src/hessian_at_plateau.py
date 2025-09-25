@@ -8,7 +8,9 @@ from typing import Callable, List, Tuple, Iterable, Optional
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+import util
 
+debug=True
 # -------------------------
 # Utils: flatten/unflatten
 # -------------------------
@@ -49,7 +51,7 @@ def make_hvp(
     dtype = params[0].dtype
     n = sum(p.numel() for p in params)
 
-    x, y = batch
+    x, y = batch #detatched
     x = x.to(device=device, dtype=dtype, non_blocking=True)
     y = y.to(device=device, non_blocking=True)
 
@@ -69,7 +71,10 @@ def make_hvp(
             loss = loss + 0.5 * weight_decay * reg
 
         # first grad (create_graph=True to build graph for second-order)
-        grad = torch.autograd.grad(loss, params, create_graph=True, retain_graph=True)
+        if(debug):
+            print("loss",util.classify_autograd_state(loss))
+            #print("params",util.classify_autograd_state(params))list
+        grad = torch.autograd.grad(loss, params, create_graph=True, retain_graph=True)# must not be detatched
 
         # inner product <grad, v>
         gv = 0.0
@@ -352,7 +357,7 @@ def train_with_curvature_monitor(
     did_analyze = False
     curvature_conf = curvature_conf or {}
 
-    for epoch in range(1, 1000000):  # your stopping condition elsewhere
+    for epoch in range(1, 10000):  # your stopping condition elsewhere
         for batch_idx, (x, y) in enumerate(train_loader):
             model.train()
             x, y = x.to(device), y.to(device)
@@ -365,7 +370,7 @@ def train_with_curvature_monitor(
             loss_val = float(loss.detach().cpu().item())
             if detector.update(loss_val) and (not did_analyze or not analyze_once):
                 # run curvature analysis on *this* batch
-                batch_for_curv = (x.detach(), y.detach())
+                batch_for_curv =(x,y) # (x.detach(), y.detach())
                 summary, (grid, density) = curvature_analysis_at_batch(
                     model, loss_fn, batch_for_curv, **curvature_conf
                 )
